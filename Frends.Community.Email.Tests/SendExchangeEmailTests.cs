@@ -199,6 +199,40 @@ namespace Frends.Community.Email.Tests
         }
 
         [Test]
+        public async Task SendEmailWithMultipleFileAttachmentTest()
+        {
+            var subject = "Email test - MultiFileAttachment";
+            var filePath1 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../first.txt");
+            File.WriteAllText(filePath1, "This is a test attachment file.");
+            var filePath2 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../second.txt");
+            File.WriteAllText(filePath2, "This is a test attachment file.");
+            var input = new ExchangeInput
+            {
+                To = _username,
+                Message = "This email has multiple file attachments.",
+                IsMessageHtml = false,
+                Subject = subject
+            };
+
+            var attachment = new Attachment
+            {
+                AttachmentType = AttachmentType.FileAttachment,
+                FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../*.txt"),
+                ThrowExceptionIfAttachmentNotFound = false,
+                SendIfNoAttachmentsFound = false
+            };
+
+            var attachmentArray = new Attachment[] { attachment };
+
+            var result = await EmailTask.SendEmailToExchangeServer(input, attachmentArray, _server, new CancellationToken());
+            Assert.IsTrue(result.EmailSent);
+            File.Delete(filePath1);
+            File.Delete(filePath2);
+            Thread.Sleep(2000); // Give the email some time to get through.
+            await DeleteMessages(subject);
+        }
+
+        [Test]
         public async Task SendEmailWithBigFileAttachmentTest()
         {
             var subject = "Email test - BigFileAttachment";

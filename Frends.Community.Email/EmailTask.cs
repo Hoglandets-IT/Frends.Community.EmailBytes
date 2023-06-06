@@ -213,6 +213,17 @@ namespace Frends.Community.Email
             var attachmentList = new MessageAttachmentsCollectionPage();
             var allAttachmentFilePaths = new List<string>();
 
+            var message = new Message
+            {
+                Subject = subject,
+                Body = messageBody,
+                ToRecipients = to,
+                CcRecipients = cc,
+                BccRecipients = bcc
+            };
+
+            var msgResult = await graphClient.Me.Messages.Request().AddAsync(message, cancellationToken);
+
             foreach (var attachment in attachments)
             {
 
@@ -248,17 +259,6 @@ namespace Frends.Community.Email
                     };
                 }
 
-                var message = new Message
-                {
-                    Subject = subject,
-                    Body = messageBody,
-                    ToRecipients = to,
-                    CcRecipients = cc,
-                    BccRecipients = bcc
-                };
-
-                var msgResult = await graphClient.Me.Messages.Request().AddAsync(message, cancellationToken);
-
                 foreach (var filePath in allAttachmentFilePaths)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -279,11 +279,12 @@ namespace Frends.Community.Email
                         var largeFileUploadTask = new LargeFileUploadTask<FileAttachment>(uploadSession, stream);
                         await largeFileUploadTask.UploadAsync();
                     }
-                    await graphClient.Me.Messages[msgResult.Id].Send().Request().PostAsync(cancellationToken);
+                    
                     if (attachment.AttachmentType == AttachmentType.AttachmentFromString) CleanUpTempWorkDir(tempFilePath);
                 }
             }
 
+            await graphClient.Me.Messages[msgResult.Id].Send().Request().PostAsync(cancellationToken);
             return new Output
             {
                 EmailSent = true,
@@ -373,25 +374,6 @@ namespace Frends.Community.Email
             var tempWorkDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(tempWorkDir);
             return tempWorkDir;
-        }
-
-        private static Encoding GetEncoding(string encoding)
-        {
-            switch (encoding.ToLower())
-            {
-                case "utf-8":
-                    return Encoding.UTF8;
-                case "ascii":
-                    return Encoding.ASCII;
-                case "utf-7":
-                    return Encoding.UTF7;
-                case "unicode":
-                    return Encoding.Unicode;
-                case "utf-32":
-                    return Encoding.UTF32;
-                default:
-                    return Encoding.Default;
-            }
         }
 
         #endregion
