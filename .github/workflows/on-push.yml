@@ -1,0 +1,23 @@
+name: BuildAndTestOnEveryPush.yml
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  UbuntuBuild:
+    name: Build on ubuntu-latest
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set up fake SMTP server
+      run: docker run -p 3000:80 -p 2525:25 -d rnwood/smtp4dev:v3
+
+    - name: Build
+      run: dotnet build
+    
+    - name: Test
+      run: dotnet test --filter Frends.HIT.Email.Tests.SendEmailTests
