@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading;
 
-namespace Frends.Community.Email.Tests
+namespace Frends.HIT.Email.Tests
 {
     /// <summary>
     /// NOTE: To run these unit tests, you need an SMTP test server.

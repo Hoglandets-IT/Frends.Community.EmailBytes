@@ -14,7 +14,7 @@ using Directory = System.IO.Directory;
 using Path = System.IO.Path;
 using File = System.IO.File;
 
-namespace Frends.Community.Email
+namespace Frends.HIT.Email
 {
     /// <summary>
     /// Read email.

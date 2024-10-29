@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Frends.Community.Email
+namespace Frends.HIT.Email
 {
     /// <summary>
     /// Settings for IMAP and POP3 servers.

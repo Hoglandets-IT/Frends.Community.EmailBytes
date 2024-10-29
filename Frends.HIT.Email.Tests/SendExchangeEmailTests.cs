@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using File = System.IO.File;
 using Path = System.IO.Path;
 
-namespace Frends.Community.Email.Tests
+namespace Frends.HIT.Email.Tests
 {
     [TestFixture]
     public class SendExchangeEmailTests

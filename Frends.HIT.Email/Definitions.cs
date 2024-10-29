@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 #pragma warning disable 1591
 
-namespace Frends.Community.Email
+namespace Frends.HIT.Email
 {
     public class Input
     {
@@ -228,6 +228,9 @@ namespace Frends.Community.Email
         [UIHint(nameof(AttachmentType), "", AttachmentType.AttachmentFromString)]
         public AttachmentFromString StringAttachment { get; set; }
 
+        [UIHint(nameof(AttachmentType), "", AttachmentType.AttachmentFromBytes)]
+        public AttachmentFromBytes ByteAttachment { get; set; }
+
         /// <summary>
         /// Attachment file's path
         /// Uses Directory.GetFiles(string, string) as a pattern matching technique.
@@ -260,7 +263,12 @@ namespace Frends.Community.Email
         /// <summary>
         /// Select this if the attachment file should be created from a string.
         /// </summary>
-        AttachmentFromString
+        AttachmentFromString,
+
+        /// <summary>
+        /// Include a raw byte stream as an attachment
+        /// </summary>
+        AttachmentFromBytes
     }
 
     public enum SecureSocketOption
@@ -291,6 +299,16 @@ namespace Frends.Community.Email
         StartTlsWhenAvailable
     }
 
+    public enum StringEncodingTypes {
+        UTF8,
+
+        ISO88591,
+
+        LATIN1,
+
+        ASCII
+    }
+
     public class AttachmentFromString
     {
         /// <summary>
@@ -303,6 +321,26 @@ namespace Frends.Community.Email
         /// Name of the attachment file.
         /// </summary>
         [DefaultValue("\"\"")]
+        public string FileName { get; set; }
+
+        /// <summary>
+        /// Text Encoding
+        /// </summary>
+        public StringEncodingTypes Encoding { get; set; }
+    }
+
+    public class AttachmentFromBytes
+    {
+        /// <summary>
+        /// Content of the attachment
+        /// </summary>
+        [DefaultValue(new byte[]{})]
+        public byte[] FileContent { get; set; }
+
+        /// <summary>
+        /// The filename of the file
+        /// </summary>
+        [DefaultValue("filename.txt")]
         public string FileName { get; set; }
     }
 }

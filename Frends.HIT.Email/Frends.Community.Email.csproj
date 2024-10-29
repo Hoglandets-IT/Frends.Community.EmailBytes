@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net471;net6.0</TargetFrameworks>
     <description>Frends Community Task for sending and reading emails.</description>
     <authors>HiQ Finland</authors>
     <copyright>HiQ Finland</copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/CommunityHiQ/Frends.Community.Email</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Hoglandets-IT/Frends.HIT.Email</PackageProjectUrl>
     <IncludeSource>true</IncludeSource>
     <PackageTags>Frends</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -24,7 +24,7 @@
     <PackageReference Include="MailKit" Version="[2.5.2]" />
     <PackageReference Include="MimeKit" Version="2.9.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
-	<PackageReference Include="Azure.Identity" Version="1.6.0" />
+	  <PackageReference Include="Azure.Identity" Version="1.13.1" />
     <PackageReference Include="Microsoft.Graph" Version="4.35.0" />
   </ItemGroup>
 

@@ -1,8 +1,8 @@
-# Frends.Community.Email
+# Frends.HIT.Email
 Frends task for sending emails. Task sends emails via SMTP protocol and can handle attachments either from file or as raw string input.
 
-[![Actions Status](https://github.com/CommunityHiQ/Frends.Community.Email/workflows/PackAndPushAfterMerge/badge.svg)](https://github.com/CommunityHiQ/Frends.Community.Email/actions)
-![MyGet](https://img.shields.io/myget/frends-community/v/Frends.Community.Email)
+[![Actions Status](https://github.com/Hoglandets-IT/Frends.HIT.Email/workflows/PackAndPushAfterMerge/badge.svg)](https://github.com/Hoglandets-IT/Frends.HIT.Email/actions)
+![MyGet](https://img.shields.io/myget/frends-community/v/Frends.HIT.Email)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 - [Installing](#installing)
@@ -19,7 +19,7 @@ Frends task for sending emails. Task sends emails via SMTP protocol and can hand
 
 # Installing
 You can install the Task via frends UI Task View or you can find the NuGet package from the following NuGet feed
-https://www.myget.org/F/frends-community/api/v3/index.json and in Gallery view in MyGet https://www.myget.org/feed/frends-community/package/nuget/Frends.Community.Email
+https://www.myget.org/F/frends-community/api/v3/index.json and in Gallery view in MyGet https://www.myget.org/feed/frends-community/package/nuget/Frends.HIT.Email
 
 # Prerequisites for Exchange
 
@@ -260,7 +260,7 @@ You can reference result properties like so:
 
 Clone a copy of the repo.
 
-`git clone https://github.com/CommunityHiQ/Frends.Community.Email.git`
+`git clone https://github.com/Hoglandets-IT/Frends.HIT.Email.git`
 
 Build the project.
 

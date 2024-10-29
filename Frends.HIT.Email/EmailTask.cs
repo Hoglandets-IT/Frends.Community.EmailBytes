@@ -18,12 +18,12 @@ using System.Linq;
 
 #pragma warning disable 1591
 
-namespace Frends.Community.Email
+namespace Frends.HIT.Email
 {
     public class EmailTask
     {
         /// <summary>
-        /// Sends email message with optional attachments. See https://github.com/CommunityHiQ/Frends.Community.Email
+        /// Sends email message with optional attachments. See https://github.com/Hoglandets-IT/Frends.HIT.Email
         /// </summary>
         /// <returns>
         /// Object { bool EmailSent, string StatusString }
@@ -61,18 +61,50 @@ namespace Frends.Community.Email
                             cancellationToken.ThrowIfCancellationRequested();
                             builder.Attachments.Add(filePath);
                         }
+
+                        continue;
                     }
 
-                    if (attachment.AttachmentType == AttachmentType.AttachmentFromString)
-                    {
-                        // Create attachment only if content is not empty.
-                        if (!string.IsNullOrEmpty(attachment.StringAttachment.FileContent))
-                        {
-                            var path = CreateTemporaryFile(attachment);
-                            builder.Attachments.Add(path);
-                            CleanUpTempWorkDir(path);
+                    byte[] byteContent = new byte[]{};
+                    string fileName = "";
+                                
+                    if (attachment.AttachmentType == AttachmentType.AttachmentFromString) {
+                        switch (attachment.StringAttachment.Encoding) {
+                            case StringEncodingTypes.UTF8:
+                                byteContent = System.Text.Encoding.UTF8.GetBytes(attachment.StringAttachment.FileContent);
+                                break;
+                            case StringEncodingTypes.ISO88591:
+                                byteContent = System.Text.Encoding.GetEncoding("ISO8859-1").GetBytes(attachment.StringAttachment.FileContent);
+                                break;
+                            case StringEncodingTypes.LATIN1:
+                                byteContent = System.Text.Encoding.GetEncoding("Latin1").GetBytes(attachment.StringAttachment.FileContent);
+                                break;
+                            case StringEncodingTypes.ASCII:
+                                byteContent = System.Text.Encoding.ASCII.GetBytes(attachment.StringAttachment.FileContent);
+                                break;
+                            default:
+                                return new Output
+                                {
+                                    EmailSent = false,
+                                    StatusString = $"Invalid encoding set for attachment " + attachment.StringAttachment.FileName
+                                };
                         }
+
+                        fileName = attachment.StringAttachment.FileName;
                     }
+                    else if (attachment.AttachmentType == AttachmentType.AttachmentFromBytes) {
+                        byteContent = attachment.ByteAttachment.FileContent;
+                        fileName = attachment.ByteAttachment.FileName;
+                    }
+                    
+                    if (byteContent.Length == 0 && (attachment.ThrowExceptionIfAttachmentNotFound || !attachment.SendIfNoAttachmentsFound)) {
+                        return new Output{
+                            EmailSent = false,
+                            StatusString = "Invalid attachment " + fileName + " - no content found"
+                        };
+                    }
+
+                    builder.Attachments.Add(fileName, byteContent);
                 }
 
                 mail.Body = builder.ToMessageBody();
@@ -134,7 +166,7 @@ namespace Frends.Community.Email
         }
 
         /// <summary>
-        /// Sends email message to Exchange with optional attachments. See https://github.com/CommunityHiQ/Frends.Community.Email
+        /// Sends email message to Exchange with optional attachments. See https://github.com/Hoglandets-IT/Frends.HIT.Email
         /// </summary>
         /// <returns>
         /// Object { bool EmailSent, string StatusString }
@@ -210,9 +242,6 @@ namespace Frends.Community.Email
 
         private static async Task<Output> SendExchangeEmailWithAttachments(Attachment[] attachments, GraphServiceClient graphClient, string subject, ItemBody messageBody, List<Recipient> to, List<Recipient> cc, List<Recipient> bcc, CancellationToken cancellationToken)
         {
-            var attachmentList = new MessageAttachmentsCollectionPage();
-            var allAttachmentFilePaths = new List<string>();
-
             var message = new Message
             {
                 Subject = subject,
@@ -226,62 +255,104 @@ namespace Frends.Community.Email
 
             foreach (var attachment in attachments)
             {
+                
 
-                string tempFilePath = "";
-                if (attachment.AttachmentType == AttachmentType.AttachmentFromString)
-                {
-                    // Create attachment only if content is not empty.
-                    if (!string.IsNullOrEmpty(attachment.StringAttachment.FileContent))
-                    {
-                        tempFilePath = CreateTemporaryFile(attachment);
-                        var attachmentContent = File.ReadAllBytes(tempFilePath);
-                        var oneAttachment = new FileAttachment
-                        {
-                            ODataType = "#microsoft.graph.fileAttachment",
-                            ContentBytes = attachmentContent,
-                            ContentType = MimeTypes.GetMimeType(tempFilePath),
-                            Name = Path.GetFileName(tempFilePath)
-                        };
-                        allAttachmentFilePaths.Add(tempFilePath);
-                    }
-                }
-                else
+                if (attachment.AttachmentType == AttachmentType.FileAttachment) {
+                    var attachmentList = new MessageAttachmentsCollectionPage();
+                    var allAttachmentFilePaths = new List<string>();
+
                     allAttachmentFilePaths = GetAttachmentFiles(attachment.FilePath);
-
-                if (attachment.ThrowExceptionIfAttachmentNotFound && allAttachmentFilePaths.Count == 0) throw new FileNotFoundException($"The given filepath \"{attachment.FilePath}\" had no matching files");
-
-                if (allAttachmentFilePaths.Count == 0 && !attachment.SendIfNoAttachmentsFound)
-                {
-                    return new Output
+                    if (allAttachmentFilePaths.Count == 0 && !attachment.SendIfNoAttachmentsFound)
                     {
-                        EmailSent = false,
-                        StatusString = $"No attachments found matching path \"{attachmentList[0].Name}\". No email sent."
-                    };
-                }
-
-                foreach (var filePath in allAttachmentFilePaths)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var info = new FileInfo(filePath);
-                    var attachmentItem = new AttachmentItem
-                    {
-                        AttachmentType = Microsoft.Graph.AttachmentType.File,
-                        Name = Path.GetFileName(filePath),
-                        Size = info.Length
-                    };
-
-                    var uploadSession = await graphClient.Me.Messages[msgResult.Id].Attachments.CreateUploadSession(attachmentItem).Request().PostAsync(cancellationToken);
-                    var allBytes = File.ReadAllBytes(filePath);
-
-                    using (var stream = new MemoryStream(allBytes))
-                    {
-                        stream.Position = 0;
-                        var largeFileUploadTask = new LargeFileUploadTask<FileAttachment>(uploadSession, stream);
-                        await largeFileUploadTask.UploadAsync();
+                        return new Output
+                        {
+                            EmailSent = false,
+                            StatusString = $"No attachments found matching path \"{attachmentList[0].Name}\". No email sent."
+                        };
                     }
+
+                    if (attachment.ThrowExceptionIfAttachmentNotFound && allAttachmentFilePaths.Count == 0) throw new FileNotFoundException($"The given filepath \"{attachment.FilePath}\" had no matching files");
                     
-                    if (attachment.AttachmentType == AttachmentType.AttachmentFromString) CleanUpTempWorkDir(tempFilePath);
+                    foreach (var filePath in allAttachmentFilePaths)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var info = new FileInfo(filePath);
+                        var attachmentSubItem = new AttachmentItem
+                        {
+                            AttachmentType = Microsoft.Graph.AttachmentType.File,
+                            Name = Path.GetFileName(filePath),
+                            Size = info.Length
+                        };
+
+                        var uploadSubSession = await graphClient.Me.Messages[msgResult.Id].Attachments.CreateUploadSession(attachmentSubItem).Request().PostAsync(cancellationToken);
+                        var allBytes = File.ReadAllBytes(filePath);
+
+                        using (var stream = new MemoryStream(allBytes))
+                        {
+                            stream.Position = 0;
+                            var largeFileUploadTask = new LargeFileUploadTask<FileAttachment>(uploadSubSession, stream);
+                            await largeFileUploadTask.UploadAsync();
+                        }
+                    }
+
+                    continue;
                 }
+
+                byte[] byteContent = new byte[]{};
+                string fileName = "";
+                               
+                if (attachment.AttachmentType == AttachmentType.AttachmentFromString) {
+                    switch (attachment.StringAttachment.Encoding) {
+                        case StringEncodingTypes.UTF8:
+                            byteContent = System.Text.Encoding.UTF8.GetBytes(attachment.StringAttachment.FileContent);
+                            break;
+                        case StringEncodingTypes.ISO88591:
+                            byteContent = System.Text.Encoding.GetEncoding("ISO8859-1").GetBytes(attachment.StringAttachment.FileContent);
+                            break;
+                        case StringEncodingTypes.LATIN1:
+                            byteContent = System.Text.Encoding.GetEncoding("Latin1").GetBytes(attachment.StringAttachment.FileContent);
+                            break;
+                        case StringEncodingTypes.ASCII:
+                            byteContent = System.Text.Encoding.ASCII.GetBytes(attachment.StringAttachment.FileContent);
+                            break;
+                        default:
+                            return new Output
+                            {
+                                EmailSent = false,
+                                StatusString = $"Invalid encoding set for attachment " + attachment.StringAttachment.FileName
+                            };
+                    }
+
+                    fileName = attachment.StringAttachment.FileName;
+                }
+                else if (attachment.AttachmentType == AttachmentType.AttachmentFromBytes) {
+                    byteContent = attachment.ByteAttachment.FileContent;
+                    fileName = attachment.ByteAttachment.FileName;
+                }
+                
+                if (byteContent.Length == 0 && (attachment.ThrowExceptionIfAttachmentNotFound || !attachment.SendIfNoAttachmentsFound)) {
+                    return new Output{
+                        EmailSent = false,
+                        StatusString = "Invalid attachment " + fileName + " - no content found"
+                    };
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                var attachmentItem = new AttachmentItem
+                {
+                    AttachmentType = Microsoft.Graph.AttachmentType.File,
+                    Name = attachment.ByteAttachment.FileName,
+                    Size = attachment.ByteAttachment.FileContent.Length
+                };
+
+                var uploadSession = await graphClient.Me.Messages[msgResult.Id].Attachments.CreateUploadSession(attachmentItem).Request().PostAsync(cancellationToken);
+                using (var fileStream = new MemoryStream(attachment.ByteAttachment.FileContent)) {
+                    fileStream.Position = 0;
+                    var largeFileUploadTask = new LargeFileUploadTask<FileAttachment>(uploadSession, fileStream);
+                    await largeFileUploadTask.UploadAsync();
+                }
+                
             }
 
             await graphClient.Me.Messages[msgResult.Id].Send().Request().PostAsync(cancellationToken);
@@ -340,40 +411,6 @@ namespace Frends.Community.Email
             var fileMask = Path.GetFileName(filePath) != "" ? Path.GetFileName(filePath) : "*";
             var filePaths = Directory.GetFiles(folder, fileMask);
             return filePaths.ToList();
-        }
-
-        /// <summary>
-        /// Create temp file of attachment from string.
-        /// </summary>
-        /// <param name="attachment"></param>
-        private static string CreateTemporaryFile(Attachment attachment)
-        {
-            var TempWorkDirBase = InitializeTemporaryWorkPath();
-            var filePath = Path.Combine(TempWorkDirBase, attachment.StringAttachment.FileName);
-            var content = attachment.StringAttachment.FileContent;
-
-            using (var sw = File.CreateText(filePath)) sw.Write(content);
-
-            return filePath;
-        }
-
-        /// <summary>
-        /// Remove the temporary workdir.
-        /// </summary>
-        /// <param name="tempWorkDir"></param>
-        private static void CleanUpTempWorkDir(string tempWorkDir)
-        {
-            if (!string.IsNullOrEmpty(tempWorkDir) && Directory.Exists(tempWorkDir)) Directory.Delete(tempWorkDir, true);
-        }
-
-        /// <summary>
-        /// Create temperary directory for temp file.
-        /// </summary>
-        private static string InitializeTemporaryWorkPath()
-        {
-            var tempWorkDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(tempWorkDir);
-            return tempWorkDir;
         }
 
         #endregion
