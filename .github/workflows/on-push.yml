@@ -2,7 +2,7 @@ name: BuildAndTestOnEveryPush.yml
 
 on:
   push:
-    branches: [ main ]
+    
 
 jobs:
   UbuntuBuild:
