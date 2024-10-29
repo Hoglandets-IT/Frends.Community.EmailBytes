@@ -16,13 +16,15 @@ namespace Frends.HIT.Email
         /// <summary>
         /// Cc recipient addresses separated by ',' or ';'.
         /// </summary>
-        [DefaultValue("\"jane.doe@somedomain.com\"")]
+        [DefaultValue("")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string Cc { get; set; }
 
         /// <summary>
         /// Bcc recipient addresses separated by ',' or ';'.
         /// </summary>
-        [DefaultValue("\"jane.doe@somedomain.com\"")]
+        [DefaultValue("")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string Bcc { get; set; }
 
         /// <summary>
@@ -75,13 +77,15 @@ namespace Frends.HIT.Email
         /// <summary>
         /// Cc recipient addresses separated by ',' or ';'.
         /// </summary>
-        [DefaultValue("\"jane.doe@somedomain.com\"")]
+        [DefaultValue("")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string Cc { get; set; }
 
         /// <summary>
         /// Bcc recipient addresses separated by ',' or ';'.
         /// </summary>
-        [DefaultValue("\"jane.doe@somedomain.com\"")]
+        [DefaultValue("")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string Bcc { get; set; }
 
         /// <summary>
@@ -89,13 +93,14 @@ namespace Frends.HIT.Email
         /// Sender email address.
         /// If left empty, logged in user email address will be used.
         /// </summary>
-        [DefaultValue("\"jane.doe@somedomain.com\"")]
+        [DefaultValue("john.doe@somedomain.com")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string From { get; set; }
 
         /// <summary>
         /// Email message's subject.
         /// </summary>
-        [DefaultValue("\"Hello Jane\"")]
+        [DefaultValue("\"Hello World\"")]
         public string Subject { get; set; }
 
         /// <summary>
@@ -321,6 +326,7 @@ namespace Frends.HIT.Email
         /// Name of the attachment file.
         /// </summary>
         [DefaultValue("\"\"")]
+        [DisplayFormat(DataFormatString = "Text")]
         public string FileName { get; set; }
 
         /// <summary>
@@ -335,11 +341,13 @@ namespace Frends.HIT.Email
         /// Content of the attachment
         /// </summary>
         [DefaultValue(new byte[]{})]
+        [DisplayFormat(DataFormatString = "Expression")]
         public byte[] FileContent { get; set; }
 
         /// <summary>
         /// The filename of the file
         /// </summary>
+        [DisplayFormat(DataFormatString = "Text")]
         [DefaultValue("filename.txt")]
         public string FileName { get; set; }
     }
